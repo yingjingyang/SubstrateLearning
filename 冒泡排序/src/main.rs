@@ -32,5 +32,6 @@ fn main() {
     bubble_sort_generic(&mut arr2);
 
     println!("Sorted array (str): {:?}", arr2);
+
 }
 
