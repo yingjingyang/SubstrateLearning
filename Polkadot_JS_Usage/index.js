@@ -2,7 +2,7 @@
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const { async, ConnectableObservable } = require('rxjs');
 
-const wsProviderUrl = 'ws://127.0.0.1:9944';
+const wsProviderUrl = 'wss://i1.calamari.systems';
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -81,15 +81,56 @@ async function subscribeEvent(api){
   }, 30000);
 }
 
+async function subTest(api){
+  const unsub = await api.query.timestamp.now((moment) => {
+    console.log(`The last block has a timestamp of ${moment}`);
+  });
+}
+
+
+
+async function getHistoricalTransactionFailureInfo(api,blockNumber) {
+  // Get the block hash for the specified block number
+  const blockHash = await api.rpc.chain.getBlockHash(blockNumber);
+
+  // Retrieve the events for the specified block
+  // const apiAT = await api.at(blockHash);
+  const block = await api.rpc.chain.getBlock(blockHash);
+  
+
+  // Filter events related to the specific transaction
+  // const transactionEvents = events.filter((event) => {
+  //   const { event: { method, section, data } } = event;
+
+  //   // Check if the event is related to the desired extrinsic
+  //   return method === 'ExtrinsicFailed' && section === 'system';
+  // });
+
+  // Extract the failure information from the events
+  if (transactionEvents.length > 0) {
+    const { event: { data } } = transactionEvents[0];
+    console.log('Transaction Failure Info:', data.toString());
+
+    // Process and extract relevant failure information
+    // ...
+  } else {
+    console.log('Transaction is successful');
+  }
+}
+
+
 async function main() {
     const api  = await connectSubstrate(wsProviderUrl);
-    const existentionDeposit = await getConst(api);
-    
-    const keyring = new Keyring({type: 'sr25519'})
-    const alice = keyring.addFromUri('//Alice')
-    const bob = keyring.addFromUri('//Bob')
 
-    await subscribeEvent(api);
+    await subTest(api);
+    // await getHistoricalTransactionFailureInfo(api,3509303)
+    // const existentionDeposit = await getConst(api);
+    
+    // const keyring = new Keyring({type: 'sr25519'})
+    // const alice = keyring.addFromUri('//Alice')
+    // const bob = keyring.addFromUri('//Bob')
+
+    // await subscribeEvent(api);
 
     // subscribeAliceBalance()
     // // Before transfer
@@ -101,8 +142,6 @@ async function main() {
 
     // // After transfer
     // await printAliceBobBalance(api,alice,bob);
-
-    
 
 }
 
