@@ -2,7 +2,7 @@
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const { async, ConnectableObservable } = require('rxjs');
 
-const wsProviderUrl = 'wss://i1.calamari.systems';
+const wsProviderUrl = 'wss://calamari.systems';
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -87,7 +87,34 @@ async function subTest(api){
   });
 }
 
+async function tracValidators(api){
+  console.log(api.query.staking)
+  const validatorKeys = await api.query.staking.keys();
 
+  // Subscribe to the balances for these accounts
+  const unsub = await api.query.balances.account.multi(validatorKeys, (balances) => {
+    console.log(`The nonce and free balances are: ${balances.map(([nonce, { free }]) => [nonce, free])}`);
+  });
+}
+
+async function stateEntries(api){
+  const [entryHash, entrySize] = await Promise.all([
+    api.query.system.account.hash("dmyEQb7rjpbyR5JCHcJ65r7DerK2GLdWwXn6DJWcnKrMuCva8"),
+    api.query.system.account.size("dmyEQb7rjpbyR5JCHcJ65r7DerK2GLdWwXn6DJWcnKrMuCva8")
+  ]);
+  
+  // Output the info
+  console.log(`The current size is ${entrySize} bytes with a hash of ${entryHash}`);
+}
+
+async function extInfo(api){
+  // Extract the info
+const { meta, method, section } = api.query.system.account;
+
+// Display some info on a specific entry
+console.log(`${section}.${method}: ${meta.documentation}`);
+console.log(`query key: ${api.query.system.account.key("dmyEQb7rjpbyR5JCHcJ65r7DerK2GLdWwXn6DJWcnKrMuCva8")}`);
+}
 
 async function getHistoricalTransactionFailureInfo(api,blockNumber) {
   // Get the block hash for the specified block number
@@ -122,7 +149,7 @@ async function getHistoricalTransactionFailureInfo(api,blockNumber) {
 async function main() {
     const api  = await connectSubstrate(wsProviderUrl);
 
-    await subTest(api);
+    await extInfo(api);
     // await getHistoricalTransactionFailureInfo(api,3509303)
     // const existentionDeposit = await getConst(api);
     
